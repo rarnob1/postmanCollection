@@ -1,0 +1,53 @@
+name: student collection run
+
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # This workflow contains a single job called "run-postman-collection"
+  run-postman-collection:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      # Install Node.js to use npm and install newman
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # You can specify the Node.js version
+
+      # Install Newman and the HTML reporter
+      - name: Install Newman and HTML reporter
+        run: |
+          npm install -g newman
+          npm install -g newman-reporter-html
+
+      # Run the Postman collection using Newman (without an environment)
+      - name: Run Postman Collection
+        run: |
+          newman run ./STUDENT.postman_collection.json \
+          --reporters cli,junit,html \
+          --reporter-junit-export ./newman-results.xml \
+          --reporter-html-export ./report.html
+
+      # Optionally, upload the test results (JUnit and HTML report) to GitHub Actions as artifacts
+      - name: Upload Newman Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: newman-junit-results
+          path: ./newman-results.xml
+
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: newman-html-report
+          path: ./report.html
